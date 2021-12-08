@@ -5,11 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:signalr_client/signalr_client.dart';
 
+import '../../main.dart';
+
 typedef HubConnectionProvider = Future<HubConnection> Function();
 
 class ChatMessage {
-  // Properites
-
+  // Properties
   final String senderName;
   final String message;
 
@@ -30,7 +31,8 @@ class ChatPageViewModel extends ViewModel {
   static const String connectionIsOpenPropName = "connectionIsOpen";
   bool get connectionIsOpen => _connectionIsOpen;
   set connectionIsOpen(bool value) {
-    updateValue(connectionIsOpenPropName, _connectionIsOpen, value, (v) => _connectionIsOpen = v);
+    updateValue(connectionIsOpenPropName, _connectionIsOpen, value,
+        (v) => _connectionIsOpen = v);
   }
 
   String _userName;
@@ -43,7 +45,7 @@ class ChatPageViewModel extends ViewModel {
 // Methods
 
   ChatPageViewModel() {
-    _serverUrl = kChatServerUrl + "/Chat";
+    _serverUrl = kChatServerUrl; // + "/Chat";
     _chatMessages = List<ChatMessage>();
     _connectionIsOpen = false;
     _userName = "Fred";
@@ -53,9 +55,20 @@ class ChatPageViewModel extends ViewModel {
 
   Future<void> openChatConnection() async {
     if (_hubConnection == null) {
-      _hubConnection = HubConnectionBuilder().withUrl(_serverUrl).build();
-      _hubConnection.onclose((error) => connectionIsOpen = false);
-      _hubConnection.on("OnMessage", _handleIncommingChatMessage);
+      _hubConnection = HubConnectionBuilder()
+          .withUrl(
+            _serverUrl,
+            options: HttpConnectionOptions(
+              skipNegotiation: true,
+              // transport: WebSocketTransport(),
+              transport: HttpTransportType.WebSockets,
+              accessTokenFactory: () async => kAccessToken,
+            ),
+            // transportType: HttpTransportType.WebSockets,
+          )
+          .build();
+      _hubConnection.onClose((error) => connectionIsOpen = false);
+      _hubConnection.on("OnMessage", _handleIncomingChatMessage);
     }
 
     if (_hubConnection.state != HubConnectionState.Connected) {
@@ -65,17 +78,17 @@ class ChatPageViewModel extends ViewModel {
   }
 
   Future<void> sendChatMessage(String chatMessage) async {
-    if( chatMessage == null ||chatMessage.length == 0){
+    if (chatMessage == null || chatMessage.length == 0) {
       return;
     }
     await openChatConnection();
-    _hubConnection.invoke("Send", args: <Object>[userName, chatMessage] );
+    _hubConnection.invoke("Send", args: <Object>[userName, chatMessage]);
   }
 
-  void _handleIncommingChatMessage(List<Object> args){
+  void _handleIncomingChatMessage(List<Object> args) {
     final String senderName = args[0];
     final String message = args[1];
-    _chatMessages.add( ChatMessage(senderName, message));
+    _chatMessages.add(ChatMessage(senderName, message));
     notifyPropertyChanged(chatMessagesPropName);
   }
 }
@@ -84,9 +97,13 @@ class ChatPageViewModelProvider extends ViewModelProvider<ChatPageViewModel> {
   // Properties
 
   // Methods
-  ChatPageViewModelProvider({Key key, viewModel: ChatPageViewModel, WidgetBuilder childBuilder}) : super(key: key, viewModel: viewModel, childBuilder: childBuilder);
+  ChatPageViewModelProvider(
+      {Key key, viewModel: ChatPageViewModel, WidgetBuilder childBuilder})
+      : super(key: key, viewModel: viewModel, childBuilder: childBuilder);
 
   static ChatPageViewModel of(BuildContext context) {
-    return (context.inheritFromWidgetOfExactType(ChatPageViewModelProvider) as ChatPageViewModelProvider).viewModel;
+    return context
+        .dependOnInheritedWidgetOfExactType<ChatPageViewModelProvider>()
+        .viewModel;
   }
 }

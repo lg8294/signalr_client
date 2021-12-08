@@ -4,34 +4,46 @@ import 'package:chatclient/views/pages/chatPageViewModel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-class ChatPage extends StatelessWidget {
-// Properties
+import 'chatPageViewModel.dart';
 
-// Methods
-
+class ChatPage extends StatefulWidget {
   ChatPage({Key key}) : super(key: key);
 
   @override
+  _ChatPageState createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
+  ChatPageViewModel vm = ChatPageViewModel();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final vm = new ChatPageViewModel();
     return ChatPageViewModelProvider(
         viewModel: vm,
         childBuilder: (ctx) {
-          return Scaffold(appBar: AppBar(title: Text("Server at: $kChatServerUrl")), 
-          resizeToAvoidBottomPadding: false, 
-          body: Padding(
-             padding: const EdgeInsets.all(8.0),
-             child: Column(
-              children: <Widget>[
-                MessageComposeView(),
-                Divider(),
-                Expanded(
-                  child: MessageChatView(),
+          return Scaffold(
+              appBar: AppBar(
+                title: Text("Server at: $kChatServerUrl"),
+                centerTitle: true,
+              ),
+              resizeToAvoidBottomPadding: false,
+              body: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: <Widget>[
+                    MessageComposeView(),
+                    Divider(),
+                    Expanded(
+                      child: MessageChatView(),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )          
-          );
+              ));
         });
   }
 }
@@ -52,13 +64,14 @@ class MessageChatView extends StatelessWidget {
           children: <Widget>[
             Text(
               "Messages:",
-              style: Theme.of(context).textTheme.subhead,
+              style: Theme.of(context).textTheme.subtitle1,
             ),
             ViewModelPropertyWidgetBuilder<bool>(
                 viewModel: vm,
                 propertyName: ChatPageViewModel.connectionIsOpenPropName,
                 builder: (context, snapshot) {
-                  return Text(vm.connectionIsOpen ? "Connected" : "Disconnected");
+                  return Text(
+                      vm.connectionIsOpen ? "Connected" : "Disconnected");
                 }),
           ],
         ),
@@ -67,7 +80,10 @@ class MessageChatView extends StatelessWidget {
           viewModel: vm,
           propertyName: ChatPageViewModel.chatMessagesPropName,
           builder: (context, snapshot) {
-            return ListView.builder(itemCount: vm.chatMessages.length, itemBuilder: (BuildContext ctx, int index) => _createMessageItemView(vm.chatMessages[index]));
+            return ListView.builder(
+                itemCount: vm.chatMessages.length,
+                itemBuilder: (BuildContext ctx, int index) =>
+                    _createMessageItemView(vm.chatMessages[index]));
           },
         )),
       ],
@@ -75,12 +91,12 @@ class MessageChatView extends StatelessWidget {
   }
 
   Widget _createMessageItemView(ChatMessage message) {
-    return Column(
-        children: <Widget>[
-          ListTile(leading: Text("${message.senderName} :"), title: Text(message.message)),
-          Divider(),
-        ]
-      );
+    return Column(children: <Widget>[
+      ListTile(
+          leading: Text("${message.senderName} :"),
+          title: Text(message.message)),
+      Divider(),
+    ]);
   }
 }
 
@@ -90,7 +106,6 @@ class MessageComposeView extends StatefulWidget {
 }
 
 class _MessageComposeViewState extends State<MessageComposeView> {
-
   // Properties
   final TextEditingController _messageTextController = TextEditingController();
   final TextEditingController _userNameController = TextEditingController();
@@ -129,7 +144,8 @@ class _MessageComposeViewState extends State<MessageComposeView> {
             Flexible(
               child: TextField(
                 controller: _messageTextController,
-                decoration: InputDecoration(labelText: 'Your message:', hintText: 'eg. Hi there!'),
+                decoration: InputDecoration(
+                    labelText: 'Your message:', hintText: 'eg. Hi there!'),
               ),
             ),
             RaisedButton(
@@ -143,7 +159,6 @@ class _MessageComposeViewState extends State<MessageComposeView> {
   }
 
   void _handleUpdateUserName() async {
-
     final vm = ChatPageViewModelProvider.of(context);
     await showDialog<String>(
         context: context,
@@ -156,7 +171,8 @@ class _MessageComposeViewState extends State<MessageComposeView> {
                   child: TextField(
                     controller: _userNameController,
                     autofocus: true,
-                    decoration: InputDecoration(labelText: 'Your Name', hintText: 'eg. John Smith'),
+                    decoration: InputDecoration(
+                        labelText: 'Your Name', hintText: 'eg. John Smith'),
                   ),
                 )
               ],

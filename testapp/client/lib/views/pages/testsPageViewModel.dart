@@ -9,6 +9,8 @@ import 'package:flutter/widgets.dart';
 import 'package:logging/logging.dart';
 import 'package:signalr_client/signalr_client.dart';
 
+import '../../main.dart';
+
 typedef HubConnectionProvider = Future<HubConnection> Function();
 
 class TestsPageViewModel extends ViewModel {
@@ -23,7 +25,8 @@ class TestsPageViewModel extends ViewModel {
   static const String errorMessagePropName = "errorMessage";
   String get errorMessage => _errorMessage;
   set errorMessage(String value) {
-    updateValue(errorMessagePropName, _errorMessage, value, (v) => _errorMessage = v);
+    updateValue(
+        errorMessagePropName, _errorMessage, value, (v) => _errorMessage = v);
   }
 
   List<LogRecord> _hubLogMessages;
@@ -40,7 +43,8 @@ class TestsPageViewModel extends ViewModel {
     _logMessagesSub = Logger.root.onRecord.listen(_handleLogMessage);
     _logger = Logger("TestsPageViewModel");
 
-    _serverUrl = kServerUrl + "/IntegrationTestHub";
+    // _serverUrl = kServerUrl + "/IntegrationTestHub";
+    _serverUrl = kServerUrl;
     _tests = Tests(_getHubConnection, _logger);
   }
 
@@ -56,15 +60,37 @@ class TestsPageViewModel extends ViewModel {
   }
 
   Future<HubConnection> _getHubConnection() async {
-    //final logger = _logger;
-    final logger = null;
+    final logger = _logger;
+    // final logger = null;
     if (_hubConnection == null) {
-      final httpOptions = new HttpConnectionOptions(logger: logger);
-      //final httpOptions = new HttpConnectionOptions(logger: logger, transport: HttpTransportType.ServerSentEvents);
-      //final httpOptions = new HttpConnectionOptions(logger: logger, transport: HttpTransportType.LongPolling);
+      // final httpOptions = HttpConnectionOptions(
+      //   logger: logger,
+      //   accessTokenFactory: () async => kAccessToken,
+      // );
+      // final httpOptions = HttpConnectionOptions(
+      //   logger: logger,
+      //   transport: HttpTransportType.ServerSentEvents,
+      //   accessTokenFactory: () async => kAccessToken,
+      // );
+      // final httpOptions = HttpConnectionOptions(
+      //   logger: logger,
+      //   transport: HttpTransportType.LongPolling,
+      //   accessTokenFactory: () async => kAccessToken,
+      // );
+      final httpOptions = HttpConnectionOptions(
+        logger: logger,
+        transport: HttpTransportType.WebSockets,
+        accessTokenFactory: () async => kAccessToken,
+      );
 
-      _hubConnection = HubConnectionBuilder().withUrl(_serverUrl, options: httpOptions).configureLogging(logger).build();
-      _hubConnection.onclose((error) => _logger.info("Connection Closed"));
+      _hubConnection = HubConnectionBuilder()
+          .withUrl(_serverUrl, options: httpOptions)
+          .configureLogging(logger)
+          .build();
+      _hubConnection.onClose((error) => _logger.info("Connection Closed"));
+      _hubConnection.on('OnMessageReceived', (arguments) {
+        _logger.info("OnMessageReceived:$arguments");
+      });
     }
 
     if (_hubConnection.state != HubConnectionState.Connected) {
@@ -91,9 +117,13 @@ class TestsPageViewModelProvider extends ViewModelProvider<TestsPageViewModel> {
   // Properties
 
   // Methods
-  TestsPageViewModelProvider({Key key, viewModel: TestsPageViewModel, WidgetBuilder childBuilder}) : super(key: key, viewModel: viewModel, childBuilder: childBuilder);
+  TestsPageViewModelProvider(
+      {Key key, viewModel: TestsPageViewModel, WidgetBuilder childBuilder})
+      : super(key: key, viewModel: viewModel, childBuilder: childBuilder);
 
   static TestsPageViewModel of(BuildContext context) {
-    return (context.inheritFromWidgetOfExactType(TestsPageViewModelProvider) as TestsPageViewModelProvider).viewModel;
+    return context
+        .dependOnInheritedWidgetOfExactType<TestsPageViewModelProvider>()
+        .viewModel;
   }
 }
