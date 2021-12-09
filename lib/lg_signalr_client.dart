@@ -1,4 +1,4 @@
-library signalr_client;
+library lg_signalr_client;
 
 // export 'src/dartio_http_client.dart';
 // export 'src/http_connection.dart';

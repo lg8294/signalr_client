@@ -3,7 +3,7 @@ import 'package:chatclient/utils/viewModel/viewModel.dart';
 import 'package:chatclient/utils/viewModel/viewModelProvider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:signalr_client/signalr_client.dart';
+import 'package:signalr_client/lg_signalr_client.dart';
 
 import '../../main.dart';
 
