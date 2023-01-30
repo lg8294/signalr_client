@@ -1,3 +1,6 @@
+## [0.2.1]
+* update dependencies
+
 ## [0.2.0]
 * refactor and style
 
