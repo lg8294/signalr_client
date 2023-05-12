@@ -1,8 +1,11 @@
+## [0.2.2-null-safety]
+* Support null safety
+
 ## [0.2.1]
-* update dependencies
+* Update dependencies
 
 ## [0.2.0]
-* refactor and style
+* Refactor and style
 
 ## [0.1.5]
 * Fix complex object serialization to json.

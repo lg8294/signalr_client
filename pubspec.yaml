@@ -1,6 +1,6 @@
 name: lg_signalr_client
 description: A flutter client for ASP.NET Core SignalR. The client is able to invoke server side hub functions and to receive method invocations issued by the server. 
-version: 0.3.0-null-safety
+version: 0.2.2-null-safety
 homepage: https://github.com/lg8294/signalr_client
 
 environment:

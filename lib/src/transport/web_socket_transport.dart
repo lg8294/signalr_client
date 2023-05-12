@@ -13,7 +13,6 @@ class WebSocketTransport implements ITransport {
 
   Logger? _logger;
   AccessTokenFactory? _accessTokenFactory;
-  bool _logMessageContent;
   WebSocket? _webSocket;
   StreamSubscription<Object?>? _webSocketListenSub;
 
@@ -24,11 +23,12 @@ class WebSocketTransport implements ITransport {
   OnReceive? onReceive;
 
   // Methods
-  WebSocketTransport(AccessTokenFactory? accessTokenFactory, Logger? logger,
-      bool logMessageContent)
-      : this._accessTokenFactory = accessTokenFactory,
-        this._logger = logger,
-        this._logMessageContent = logMessageContent;
+  WebSocketTransport(
+    AccessTokenFactory? accessTokenFactory,
+    Logger? logger,
+    bool logMessageContent,
+  )   : this._accessTokenFactory = accessTokenFactory,
+        this._logger = logger;
 
   @override
   Future<void> connect(String url, TransferFormat transferFormat) async {
@@ -37,7 +37,7 @@ class WebSocketTransport implements ITransport {
     if (_accessTokenFactory != null) {
       final token = await _accessTokenFactory!();
       if (!isStringEmpty(token)) {
-        final encodedToken = Uri.encodeComponent(token);
+        final encodedToken = Uri.encodeComponent(token!);
         url +=
             (url.indexOf("?") < 0 ? "?" : "&") + "access_token=$encodedToken";
       }
