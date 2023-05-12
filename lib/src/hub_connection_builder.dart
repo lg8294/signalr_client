@@ -13,13 +13,13 @@ import 'utils.dart';
 class HubConnectionBuilder {
   // Properties
 
-  IHubProtocol _protocol;
+  IHubProtocol? _protocol;
 
-  HttpConnectionOptions _httpConnectionOptions;
+  HttpConnectionOptions? _httpConnectionOptions;
 
-  String _url;
+  String? _url;
 
-  Logger _logger;
+  Logger? _logger;
 
   /// Configures console logging for the HubConnection.
   ///
@@ -40,7 +40,7 @@ class HubConnectionBuilder {
   /// Returns the builder instance, for chaining.
   ///
   HubConnectionBuilder withUrl(String url,
-      {HttpConnectionOptions options, HttpTransportType transportType}) {
+      {HttpConnectionOptions? options, HttpTransportType? transportType}) {
     assert(!isStringEmpty(url));
     assert(!(options != null && transportType != null));
 
@@ -60,8 +60,6 @@ class HubConnectionBuilder {
   /// protocol: The IHubProtocol implementation to use.
   ///
   HubConnectionBuilder withHubProtocol(IHubProtocol protocol) {
-    assert(protocol != null);
-
     _protocol = protocol;
     return this;
   }
@@ -81,7 +79,7 @@ class HubConnectionBuilder {
       throw new GeneralError(
           "The 'HubConnectionBuilder.withUrl' method must be called before building the connection.");
     }
-    final connection = HttpConnection(_url, options: httpConnectionOptions);
+    final connection = HttpConnection(_url!, options: httpConnectionOptions);
     return HubConnection(connection, _logger, _protocol ?? JsonHubProtocol());
   }
 }

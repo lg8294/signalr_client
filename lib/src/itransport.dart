@@ -11,7 +11,7 @@ enum HttpTransportType {
   /// Specifies the Long Polling transport. */
   LongPolling, // = 4,
 }
-HttpTransportType httpTransportTypeFromString(String value) {
+HttpTransportType? httpTransportTypeFromString(String? value) {
   if (value == null) {
     return null;
   }
@@ -20,13 +20,10 @@ HttpTransportType httpTransportTypeFromString(String value) {
   switch (value) {
     case "WEBSOCKETS":
       return HttpTransportType.WebSockets;
-      break;
     case "SERVERSENTEVENTS":
       return HttpTransportType.ServerSentEvents;
-      break;
     case "LONGPOLLING":
       return HttpTransportType.LongPolling;
-      break;
     default:
       throw new GeneralError("$value is not a supported HttpTransportType");
   }
@@ -41,18 +38,12 @@ enum TransferFormat {
 }
 
 TransferFormat getTransferFormatFromString(String value) {
-  if (value == null) {
-    return null;
-  }
-
   value = value.toUpperCase();
   switch (value) {
     case "TEXT":
       return TransferFormat.Text;
-      break;
     case "BINARY":
       return TransferFormat.Binary;
-      break;
     default:
       throw new GeneralError("$value is not a supported HttpTransportType");
   }
@@ -60,10 +51,10 @@ TransferFormat getTransferFormatFromString(String value) {
 
 /// Data received call back.
 /// data: the content. Either a string (json) or Uint8List (binary)
-typedef OnReceive = void Function(Object data);
+typedef OnReceive = void Function(Object? data);
 
 ///
-typedef OnClose = void Function(Exception error);
+typedef OnClose = void Function(Exception? error);
 
 typedef AccessTokenFactory = Future<String> Function();
 
@@ -73,7 +64,7 @@ abstract class ITransport {
 
   /// data: the content. Either a string (json) or Uint8List (binary)
   Future<void> send(Object data);
-  Future<void> stop(Error error);
-  OnReceive onReceive;
-  OnClose onClose;
+  Future<void> stop(Error? error);
+  OnReceive? onReceive;
+  OnClose? onClose;
 }

@@ -4,7 +4,7 @@ import 'package:client/views/pages/chatPageViewModel.dart';
 import 'package:flutter/material.dart';
 
 class ChatPage extends StatefulWidget {
-  ChatPage({Key? key}) : super(key: key);
+  const ChatPage({Key? key}) : super(key: key);
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -25,14 +25,14 @@ class _ChatPageState extends State<ChatPage> {
         childBuilder: (ctx) {
           return Scaffold(
               appBar: AppBar(
-                title: Text("Server at: $kChatServerUrl"),
+                title: const Text("Server at: $kChatServerUrl"),
                 centerTitle: true,
               ),
               resizeToAvoidBottomInset: false,
               body: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
-                  children: <Widget>[
+                  children: const <Widget>[
                     MessageComposeView(),
                     Divider(),
                     Expanded(
@@ -46,6 +46,8 @@ class _ChatPageState extends State<ChatPage> {
 }
 
 class MessageChatView extends StatelessWidget {
+  const MessageChatView({Key? key}) : super(key: key);
+
   // Properites
 
   // Methods
@@ -92,12 +94,14 @@ class MessageChatView extends StatelessWidget {
       ListTile(
           leading: Text("${message.senderName} :"),
           title: Text(message.message)),
-      Divider(),
+      const Divider(),
     ]);
   }
 }
 
 class MessageComposeView extends StatefulWidget {
+  const MessageComposeView({Key? key}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() => _MessageComposeViewState();
 }
@@ -141,12 +145,12 @@ class _MessageComposeViewState extends State<MessageComposeView> {
             Flexible(
               child: TextField(
                 controller: _messageTextController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                     labelText: 'Your message:', hintText: 'eg. Hi there!'),
               ),
             ),
             ElevatedButton(
-              child: Text("send"),
+              child: const Text("send"),
               onPressed: () => vm.sendChatMessage(_messageTextController.text),
             )
           ],
@@ -168,7 +172,7 @@ class _MessageComposeViewState extends State<MessageComposeView> {
                   child: TextField(
                     controller: _userNameController,
                     autofocus: true,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                         labelText: 'Your Name', hintText: 'eg. John Smith'),
                   ),
                 )

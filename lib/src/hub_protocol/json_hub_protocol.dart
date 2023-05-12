@@ -32,19 +32,15 @@ class JsonHubProtocol implements IHubProtocol {
   /// A logger that will be used to log messages that occur during parsing.
   ///
   @override
-  List<HubMessageBase> parseMessages(Object input, Logger logger) {
+  List<HubMessageBase> parseMessages(Object input, Logger? logger) {
     // Only JsonContent is allowed.
     if (!(input is String)) {
       throw new GeneralError(
           "Invalid input for JSON hub protocol. Expected a string.");
     }
 
-    final jsonInput = input as String;
-    final hubMessages = List<HubMessageBase>();
-
-    if (input == null) {
-      return hubMessages;
-    }
+    final jsonInput = input;
+    final List<HubMessageBase> hubMessages = [];
 
     // Parse the messages
     final messages = TextMessageFormat.parse(jsonInput);
@@ -80,12 +76,12 @@ class JsonHubProtocol implements IHubProtocol {
     return hubMessages;
   }
 
-  static MessageType _getMessageTypeFromJson(Map<String, dynamic> json) {
+  static MessageType? _getMessageTypeFromJson(Map<String, dynamic> json) {
     return parseMessageTypeFromString(json["type"]);
   }
 
-  static MessageHeaders createMessageHeadersFromJson(
-      Map<String, dynamic> jsonData) {
+  static MessageHeaders? createMessageHeadersFromJson(
+      Map<String, dynamic>? jsonData) {
     if (jsonData != null) {
       throw GeneralError("ToDo");
     }
@@ -94,10 +90,15 @@ class JsonHubProtocol implements IHubProtocol {
 
   static InvocationMessage _getInvocationMessageFormJson(
       Map<String, dynamic> jsonData) {
-    final MessageHeaders headers =
+    final MessageHeaders? headers =
         createMessageHeadersFromJson(jsonData["headers"]);
-    final message = InvocationMessage(jsonData["target"], jsonData["arguments"],
-        headers, jsonData["invocationId"]);
+    print(jsonData);
+    final message = InvocationMessage(
+      jsonData["target"],
+      jsonData['arguments']?.cast<Object>().toList(),
+      headers,
+      jsonData["invocationId"],
+    );
 
     _assertNotEmptyString(
         message.target, "Invalid payload for Invocation message.");
@@ -111,7 +112,7 @@ class JsonHubProtocol implements IHubProtocol {
 
   static StreamItemMessage _getStreamItemMessageFormJson(
       Map<String, dynamic> jsonData) {
-    final MessageHeaders headers =
+    final MessageHeaders? headers =
         createMessageHeadersFromJson(jsonData["headers"]);
     final message =
         StreamItemMessage(jsonData["item"], headers, jsonData["invocationId"]);
@@ -126,7 +127,7 @@ class JsonHubProtocol implements IHubProtocol {
 
   static CompletionMessage _getCompletionMessageFormJson(
       Map<String, dynamic> jsonData) {
-    final MessageHeaders headers =
+    final MessageHeaders? headers =
         createMessageHeadersFromJson(jsonData["headers"]);
     final message = CompletionMessage(jsonData["error"], jsonData["result"],
         headers, jsonData["invocationId"]);
@@ -158,7 +159,6 @@ class JsonHubProtocol implements IHubProtocol {
   ///
   @override
   String writeMessage(HubMessageBase message) {
-    assert(message != null);
     var jsonObj = _messageAsMap(message);
     return TextMessageFormat.write(json.encode(jsonObj));
   }
@@ -172,7 +172,7 @@ class JsonHubProtocol implements IHubProtocol {
       throw GeneralError("Cannot encode message of type '${message.typ}'.");
     }
 
-    final messageType = (message as HubMessageBase).type.index;
+    final messageType = message.type.index;
 
     if (message is InvocationMessage) {
       return {
@@ -224,7 +224,7 @@ class JsonHubProtocol implements IHubProtocol {
     throw GeneralError("Converting '${message.type}' is not implemented.");
   }
 
-  static void _assertNotEmptyString(String value, String errorMessage) {
+  static void _assertNotEmptyString(String? value, String errorMessage) {
     if (isStringEmpty(value)) {
       throw InvalidPayloadException(errorMessage);
     }

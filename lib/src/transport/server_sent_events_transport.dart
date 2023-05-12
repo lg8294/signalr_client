@@ -1,37 +1,36 @@
 import 'dart:async';
 
 import 'package:logging/logging.dart';
-import 'package:w3c_event_source/event_source.dart';
 
 import '../errors.dart';
 import '../itransport.dart';
 import '../signalr_http_client.dart';
 import '../utils.dart';
+import '../w3c_event_source/w3c_event_source.dart';
 
 class ServerSentEventsTransport implements ITransport {
   // Properties
   final SignalRHttpClient _httpClient;
-  final AccessTokenFactory _accessTokenFactory;
+  final AccessTokenFactory? _accessTokenFactory;
 
-  final Logger _logger;
+  final Logger? _logger;
   final bool _logMessageContent;
-  EventSource _eventSource;
-  StreamSubscription<MessageEvent> _eventSourceSub;
-  String _url;
+  EventSource? _eventSource;
+  StreamSubscription<MessageEvent>? _eventSourceSub;
+  String? _url;
 
   @override
-  OnClose onClose;
+  OnClose? onClose;
 
   @override
-  OnReceive onReceive;
+  OnReceive? onReceive;
 
   ServerSentEventsTransport(
       SignalRHttpClient httpClient,
-      AccessTokenFactory accessTokenFactory,
-      Logger logger,
+      AccessTokenFactory? accessTokenFactory,
+      Logger? logger,
       bool logMessageContent)
-      : assert(httpClient != null),
-        _httpClient = httpClient,
+      : _httpClient = httpClient,
         _accessTokenFactory = accessTokenFactory,
         _logger = logger,
         _logMessageContent = logMessageContent;
@@ -40,14 +39,13 @@ class ServerSentEventsTransport implements ITransport {
   @override
   Future<void> connect(String url, TransferFormat transferFormat) async {
     assert(!isStringEmpty(url));
-    assert(transferFormat != null);
     _logger?.finest("(SSE transport) Connecting");
 
     // set url before accessTokenFactory because this.url is only for send and we set the auth header instead of the query string for send
     _url = url;
 
     if (_accessTokenFactory != null) {
-      final token = await _accessTokenFactory();
+      final token = await _accessTokenFactory!();
       if (!isStringEmpty(token)) {
         final encodedToken = Uri.encodeComponent(token);
         url +=
@@ -63,20 +61,20 @@ class ServerSentEventsTransport implements ITransport {
 
     _eventSource = EventSource(Uri.parse(url));
 
-    _eventSourceSub = _eventSource.events.listen((MessageEvent event) {
+    _eventSourceSub = _eventSource!.events.listen((MessageEvent event) {
       if (onReceive != null) {
         try {
           //_logger.log(LogLevel.Trace, "(SSE transport) data received. ${getDataDetail(e.data, this.logMessageContent)}.`);
           _logger?.finest("(SSE transport) data received");
-          onReceive(event.data);
+          onReceive!(event.data);
         } catch (error) {
-          _close(error);
+          _close(error as Error?);
           return;
         }
       }
     }, onError: (Object error) {
       if (opened) {
-        _close(error);
+        _close(error as Error?);
       }
     }, onDone: () {
       _close(null);
@@ -94,24 +92,24 @@ class ServerSentEventsTransport implements ITransport {
   }
 
   @override
-  Future<void> stop(Error error) {
+  Future<void> stop(Error? error) {
     _close(error);
     return Future.value(null);
   }
 
-  _close(Error error) {
+  _close(Error? error) {
     if (_eventSourceSub != null) {
-      _eventSourceSub.cancel();
+      _eventSourceSub!.cancel();
       _eventSource = null;
 
       if (onClose != null) {
-        Exception ex;
+        Exception? ex;
         if (error != null) {
           ex = (error is Exception)
-              ? error
-              : new GeneralError(error?.toString());
+              ? error as Exception
+              : new GeneralError(error.toString());
         }
-        onClose(ex);
+        onClose!(ex);
       }
     }
   }

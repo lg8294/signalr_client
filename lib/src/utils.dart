@@ -4,20 +4,20 @@ import 'ihub_protocol.dart';
 import 'itransport.dart';
 import 'signalr_http_client.dart';
 
-bool isStringEmpty(String value) {
+bool isStringEmpty(String? value) {
   return (value == null) || (value.length == 0);
 }
 
-bool isListEmpty(List value) {
+bool isListEmpty(List? value) {
   return (value == null) || (value.length == 0);
 }
 
 Future<void> sendMessage(
-    Logger logger,
+    Logger? logger,
     String transportName,
     SignalRHttpClient httpClient,
-    String url,
-    AccessTokenFactory accessTokenFactory,
+    String? url,
+    AccessTokenFactory? accessTokenFactory,
     Object content,
     bool logMessageContent) async {
   MessageHeaders headers = MessageHeaders();
@@ -37,5 +37,5 @@ Future<void> sendMessage(
   final response = await httpClient.post(url, options: req);
 
   logger?.finest(
-      "($transportName transport) request complete. Response status: ${response.statusCode}.");
+      "($transportName transport) request complete. Response status: ${response?.statusCode}.");
 }

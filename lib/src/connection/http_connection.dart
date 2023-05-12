@@ -23,11 +23,11 @@ enum ConnectionState {
 
 class NegotiateResponse {
   // Properties
-  String connectionId;
-  List<AvailableTransport> availableTransports;
-  final String url;
-  final String accessToken;
-  final String error;
+  String? connectionId;
+  List<AvailableTransport>? availableTransports;
+  final String? url;
+  final String? accessToken;
+  final String? error;
 
   bool get hasConnectionId => !isStringEmpty(connectionId);
 
@@ -46,19 +46,18 @@ class NegotiateResponse {
       this.accessToken, this.error);
 
   NegotiateResponse.fromJson(Map<String, dynamic> json)
-      : assert(json != null),
-        this.connectionId = json['connectionId'],
+      : this.connectionId = json['connectionId'],
         this.url = json['url'],
         this.accessToken = json['accessToken'],
         this.error = json['error'] {
     availableTransports = [];
-    final List<dynamic> transports = json['availableTransports'];
+    final List<dynamic>? transports = json['availableTransports'];
     if (transports == null) {
       return;
     }
 
     for (var i = 0; i < transports.length; i++) {
-      availableTransports.add(AvailableTransport.fromJson(transports[i]));
+      availableTransports!.add(AvailableTransport.fromJson(transports[i]));
     }
   }
 }
@@ -66,8 +65,8 @@ class NegotiateResponse {
 class AvailableTransport {
   // Properties
 
-  HttpTransportType transport;
-  List<TransferFormat> transferFormats;
+  HttpTransportType? transport;
+  List<TransferFormat>? transferFormats;
 
   // Methods
 
@@ -76,17 +75,13 @@ class AvailableTransport {
   AvailableTransport.fromJson(Map<String, dynamic> json) {
     transferFormats = [];
 
-    if (json == null) {
-      return;
-    }
-
     transport = httpTransportTypeFromString(json['transport']);
-    List<dynamic> formats = json['transferFormats'];
+    List<dynamic>? formats = json['transferFormats'];
     if (formats == null) {
       return;
     }
     for (var i = 0; i < formats.length; i++) {
-      transferFormats.add(getTransferFormatFromString(formats[i]));
+      transferFormats!.add(getTransferFormatFromString(formats[i]));
     }
   }
 }
@@ -95,38 +90,37 @@ class HttpConnection implements IConnection {
   // Properties
   static final maxRedirects = 100;
 
-  ConnectionState _connectionState;
-  String _baseUrl;
-  SignalRHttpClient _httpClient;
-  final Logger _logger;
-  HttpConnectionOptions _options;
-  ITransport _transport;
-  Future<void> _startPromise;
-  Exception _stopError;
-  AccessTokenFactory _accessTokenFactory;
+  ConnectionState? _connectionState;
+  late String _baseUrl;
+  late SignalRHttpClient _httpClient;
+  final Logger? _logger;
+  late HttpConnectionOptions _options;
+  ITransport? _transport;
+  late Future<void> _startPromise;
+  Exception? _stopError;
+  AccessTokenFactory? _accessTokenFactory;
 
-  ConnectionFeatures features;
-
-  @override
-  OnReceive onReceive;
+  ConnectionFeatures? features;
 
   @override
-  OnClose onClose;
+  OnReceive? onReceive;
+
+  @override
+  OnClose? onClose;
 
   // Methods
 
-  HttpConnection(String url, {HttpConnectionOptions options})
-      : assert(url != null),
-        _logger = options?.logger {
+  HttpConnection(String url, {HttpConnectionOptions? options})
+      : _logger = options?.logger {
     _baseUrl = url;
 
     _options = options ?? HttpConnectionOptions();
-    _httpClient = options.httpClient ?? DartIOHttpClient(_logger);
+    _httpClient = options!.httpClient ?? DartIOHttpClient(_logger);
     _connectionState = ConnectionState.Disconnected;
   }
 
   @override
-  Future<void> start({TransferFormat transferFormat}) {
+  Future<void> start({TransferFormat? transferFormat}) {
     transferFormat = transferFormat ?? TransferFormat.Binary;
 
     _logger
@@ -150,11 +144,11 @@ class HttpConnection implements IConnection {
           "Cannot send data if the connection is not in the 'Connected' State."));
     }
 
-    return _transport.send(data);
+    return _transport!.send(data);
   }
 
   @override
-  Future<void> stop(Exception error) async {
+  Future<void> stop(Exception? error) async {
     _connectionState = ConnectionState.Disconnected;
     // Set error as soon as possible otherwise there is a race between
     // the transport closing and providing an error and the error from a close message
@@ -169,7 +163,7 @@ class HttpConnection implements IConnection {
 
     // The transport's onClose will trigger stopConnection which will run our onClose event.
     if (_transport != null) {
-      await _transport.stop(null);
+      await _transport!.stop(null);
       _transport = null;
     }
   }
@@ -212,7 +206,7 @@ class HttpConnection implements IConnection {
           // }
 
           if (negotiateResponse.isRedirectResponse) {
-            url = negotiateResponse.url;
+            url = negotiateResponse.url!;
           }
 
           if (negotiateResponse.hasAccessToken) {
@@ -232,14 +226,14 @@ class HttpConnection implements IConnection {
         }
 
         await _createTransport(
-            url, _options.transport, negotiateResponse, transferFormat);
+            url, _options.transport!, negotiateResponse, transferFormat);
       }
 
       if (_transport is LongPollingTransport) {
         if (features == null) {
           features = ConnectionFeatures(true);
         } else {
-          features.inherentKeepAlive = true;
+          features!.inherentKeepAlive = true;
         }
       }
 
@@ -260,7 +254,7 @@ class HttpConnection implements IConnection {
   Future<NegotiateResponse> _getNegotiationResponse(String url) async {
     MessageHeaders headers = MessageHeaders();
     if (_accessTokenFactory != null) {
-      final token = await _accessTokenFactory();
+      final token = await _accessTokenFactory!();
       if (token != null) {
         headers.setHeaderValue("Authorization", "Bearer $token");
       }
@@ -273,7 +267,7 @@ class HttpConnection implements IConnection {
           SignalRHttpRequest(content: "", headers: headers);
       final response = await _httpClient.post(negotiateUrl, options: options);
 
-      if (response.statusCode != 200) {
+      if (response!.statusCode != 200) {
         throw GeneralError(
             "Unexpected status code returned from negotiate $response.statusCode");
       }
@@ -301,7 +295,7 @@ class HttpConnection implements IConnection {
       _logger?.finer(
           "Connection was provided an instance of ITransport, using that directly.");
       _transport = requestedTransport;
-      await _transport.connect(connectUrl, requestedTransferFormat);
+      await _transport!.connect(connectUrl, requestedTransferFormat);
 
       // only change the state if we were connecting to not overwrite
       // the state if the connection is already marked as Disconnected
@@ -309,11 +303,11 @@ class HttpConnection implements IConnection {
       return;
     }
 
-    final transports = negotiateResponse.availableTransports;
+    final transports = negotiateResponse.availableTransports!;
     for (var endpoint in transports) {
       _connectionState = ConnectionState.Connecting;
-      final transport = _resolveTransport(
-          endpoint, requestedTransport, requestedTransferFormat);
+      final transport = _resolveTransport(endpoint,
+          requestedTransport as HttpTransportType, requestedTransferFormat);
       if (transport == null) {
         continue;
       }
@@ -342,19 +336,19 @@ class HttpConnection implements IConnection {
     switch (transport) {
       case HttpTransportType.WebSockets:
         return WebSocketTransport(
-            _accessTokenFactory, _logger, _options.logMessageContent ?? false);
+            _accessTokenFactory, _logger, _options.logMessageContent);
       case HttpTransportType.ServerSentEvents:
         return new ServerSentEventsTransport(_httpClient, _accessTokenFactory,
-            _logger, _options.logMessageContent ?? false);
+            _logger, _options.logMessageContent);
       case HttpTransportType.LongPolling:
         return LongPollingTransport(_httpClient, _accessTokenFactory, _logger,
-            _options.logMessageContent ?? false);
+            _options.logMessageContent);
       default:
         throw new GeneralError("Unknown transport: $transport.");
     }
   }
 
-  HttpTransportType _resolveTransport(
+  HttpTransportType? _resolveTransport(
       AvailableTransport endpoint,
       HttpTransportType requestedTransport,
       TransferFormat requestedTransferFormat) {
@@ -365,7 +359,7 @@ class HttpConnection implements IConnection {
     } else {
       final transferFormats = endpoint.transferFormats;
       if (transportMatches(requestedTransport, transport)) {
-        if (transferFormats.indexOf(requestedTransferFormat) >= 0) {
+        if (transferFormats!.indexOf(requestedTransferFormat) >= 0) {
           _logger?.finer("Selecting transport '$transport'");
           return transport;
         } else {
@@ -388,7 +382,7 @@ class HttpConnection implements IConnection {
     return false;
   }
 
-  void _stopConnection(Exception error) {
+  void _stopConnection(Exception? error) {
     _transport = null;
 
     // If we have a stopError, it takes precedence over the error from the transport
@@ -403,11 +397,11 @@ class HttpConnection implements IConnection {
     _connectionState = ConnectionState.Disconnected;
 
     if (onClose != null) {
-      onClose(error);
+      onClose!(error);
     }
   }
 
-  static String _createConnectUrl(String url, String connectionId) {
+  static String _createConnectUrl(String url, String? connectionId) {
     if (isStringEmpty(connectionId)) {
       return url;
     }
@@ -425,8 +419,8 @@ class HttpConnection implements IConnection {
     return negotiateUrl;
   }
 
-  static bool transportMatches(
-      HttpTransportType requestedTransport, HttpTransportType actualTransport) {
+  static bool transportMatches(HttpTransportType? requestedTransport,
+      HttpTransportType actualTransport) {
     return (requestedTransport == null) ||
         (actualTransport == requestedTransport);
   }
